@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Strength Analyzer</title>
+  <!-- Manrope font -->
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Feather icons (for eye/eye-off and other UI icons) -->
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    /* Base styles */
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary: #7c3aed;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --blue-50: #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-700: #1d4ed8;
+      --blue-800: #1e40af;
+      --green-50: #ecfdf5;
+      --green-100: #d1fae5;
+      --green-600: #059669;
+      --green-800: #065f46;
+      --orange-500: #f97316;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+      background-color: var(--slate-100);
+      color: var(--slate-800);
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 36rem; /* 576px */
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: 100%;
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .card-header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .card-header p {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      margin-top: 0.25rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .feedback-section {
+      padding: 1rem 1.5rem;
+      background-color: var(--blue-50);
+      border-top: 1px solid var(--blue-100);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .feedback-section h3 {
+      font-weight: 500;
+      color: var(--blue-800);
+      margin-bottom: 0.5rem;
+    }
+
+    .feedback-section ul {
+      color: var(--blue-700);
+      font-size: 0.875rem;
+      padding-left: 1.25rem;
+      list-style-type: disc;
+    }
+
+    .feedback-section li {
+      margin-bottom: 0.25rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--slate-700);
+      margin-bottom: 0.5rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .password-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-family: 'Manrope', sans-serif;
+      font-size: 1rem;
+      border: 1px solid var(--slate-300);
+      border-radius: 0.5rem;
+      transition: all 0.3s;
+      padding-right: 2.5rem;
+    }
+
+    .password-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--slate-500);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-password:hover {
+      color: var(--slate-700);
+    }
+
+    .input-hint {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--slate-500);
+    }
+
+    .strength-meter {
+      margin-bottom: 1.5rem;
+    }
+
+    .strength-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+    }
+
+    .strength-label {
+      font-weight: 500;
+    }
+
+    .character-count {
+      color: var(--slate-600);
+    }
+
+    .meter-background {
+      width: 100%;
+      height: 0.5rem;
+      background-color: var(--slate-200);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .bg-success {
+      background-color: var(--success);
+    }
+
+    .bg-warning {
+      background-color: var(--warning);
+    }
+
+    .bg-danger {
+      background-color: var(--danger);
+    }
+
+    .bg-orange-500 {
+      background-color: var(--orange-500);
+    }
+
+    .crack-time {
+      margin-bottom: 1.5rem;
+      padding: 1.25rem;
+      background-color: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+
+    .crack-time h2 {
+      font-size: 1.125rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .crack-time-value {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--slate-800);
+      margin-bottom: 0.5rem;
+    }
+
+    .crack-time-note {
+      font-size: 0.875rem;
+      color: var(--slate-600);
+    }
+
+    .character-types {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .character-types {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .character-type {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--slate-200);
+    }
+
+    .character-type-icon {
+      margin-bottom: 0.25rem;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .character-type-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .present {
+      color: var(--primary);
+    }
+
+    .not-present {
+      color: var(--slate-300);
+    }
+
+    .text-not-present {
+      color: var(--slate-400);
+    }
+
+    .accordion {
+      width: 100%;
+      max-width: 36rem;
+      margin-top: 1.5rem;
+    }
+
+    .accordion-item {
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .accordion-header {
+      padding: 1rem 1.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+
+    .accordion-header:hover {
+      background-color: var(--slate-50);
+    }
+
+    .accordion-content {
+      padding: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .accordion-content.active {
+      padding: 0 1.5rem 1rem 1.5rem;
+      max-height: 500px;
+    }
+
+    .accordion-content p {
+      margin-bottom: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--slate-600);
+    }
+
+    .accordion-content ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--slate-600);
+    }
+
+    .accordion-content li {
+      margin-bottom: 0.25rem;
+    }
+
+    .tips-list {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .tip-item {
+      display: flex;
+      align-items: flex-start;
+      padding-bottom: 0.5rem;
+    }
+
+    .tip-icon {
+      color: var(--success);
+      margin-right: 0.5rem;
+      margin-top: 0.125rem;
+    }
+
+    .privacy-badge {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      background-color: var(--green-50);
+      border-radius: 0.5rem;
+      border: 1px solid var(--green-100);
+    }
+
+    .privacy-icon {
+      color: var(--green-600);
+      margin-right: 0.5rem;
+    }
+
+    .privacy-text {
+      color: var(--green-800);
+      font-weight: 500;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--slate-500);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <header class="card-header">
+        <h1>Password Strength Analyzer</h1>
+        <p>Check how secure your password is without storing it</p>
+      </header>
+      
+      <div class="card-body">
+        <div class="input-group">
+          <label for="password" class="input-label">Enter your password</label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="password" 
+              class="password-input" 
+              placeholder="Type your password here..."
+            >
+            <button type="button" class="toggle-password" id="toggle-password" aria-label="Toggle password visibility">
+              <i data-feather="eye"></i>
+            </button>
+          </div>
+          <div class="input-hint">Your password is never stored or transmitted</div>
+        </div>
+
+        <div class="strength-meter">
+          <div class="strength-header">
+            <span class="strength-label" id="strength-label">Weak strength</span>
+            <span class="character-count" id="character-count">0 characters</span>
+          </div>
+          <div class="meter-background">
+            <div class="meter-fill bg-danger" id="strength-meter-fill" style="width: 5%;"></div>
+          </div>
+        </div>
+
+        <div class="crack-time">
+          <h2>Estimated time to crack</h2>
+          <div class="crack-time-value" id="crack-time">Instantly</div>
+          <p class="crack-time-note">Based on modern computer processing using brute force methods</p>
+        </div>
+
+        <div class="character-types" id="character-types">
+          <div class="character-type">
+            <div class="character-type-icon not-present">
+              <i data-feather="x"></i>
+            </div>
+            <div class="character-type-label text-not-present">Uppercase</div>
+          </div>
+          <div class="character-type">
+            <div class="character-type-icon not-present">
+              <i data-feather="x"></i>
+            </div>
+            <div class="character-type-label text-not-present">Lowercase</div>
+          </div>
+          <div class="character-type">
+            <div class="character-type-icon not-present">
+              <i data-feather="x"></i>
+            </div>
+            <div class="character-type-label text-not-present">Numbers</div>
+          </div>
+          <div class="character-type">
+            <div class="character-type-icon not-present">
+              <i data-feather="x"></i>
+            </div>
+            <div class="character-type-label text-not-present">Symbols</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="feedback-section" id="feedback-section" style="display: none;">
+        <h3>Feedback</h3>
+        <ul id="feedback-list">
+          <li>Type a password to see its strength</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="accordion">
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span>How does this calculator work?</span>
+          <i data-feather="chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <p>Our calculator estimates how long it would take for a computer to crack your password using brute force methods, which try all possible combinations.</p>
+          <p>We analyze several factors:</p>
+          <ul>
+            <li>Password length (longer is better)</li>
+            <li>Character types used (uppercase, lowercase, numbers, symbols)</li>
+            <li>Common patterns and dictionary words</li>
+          </ul>
+          <p>The calculation assumes modern computing power (approx. billions of guesses per second) in a worst-case scenario.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span>Tips for stronger passwords</span>
+          <i data-feather="chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <div class="tips-list">
+            <div class="tip-item">
+              <span class="tip-icon">
+                <i data-feather="check"></i>
+              </span>
+              <span><strong>Use at least 12 characters</strong> - The longer, the better</span>
+            </div>
+            <div class="tip-item">
+              <span class="tip-icon">
+                <i data-feather="check"></i>
+              </span>
+              <span><strong>Mix character types</strong> - Include uppercase, lowercase, numbers, and symbols</span>
+            </div>
+            <div class="tip-item">
+              <span class="tip-icon">
+                <i data-feather="check"></i>
+              </span>
+              <span><strong>Avoid common patterns</strong> - Like 123456, qwerty, or password</span>
+            </div>
+            <div class="tip-item">
+              <span class="tip-icon">
+                <i data-feather="check"></i>
+              </span>
+              <span><strong>Don't use personal information</strong> - Like birthdates or names</span>
+            </div>
+            <div class="tip-item">
+              <span class="tip-icon">
+                <i data-feather="check"></i>
+              </span>
+              <span><strong>Consider using a passphrase</strong> - Several random words with special characters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span>Privacy information</span>
+          <i data-feather="chevron-down"></i>
+        </div>
+        <div class="accordion-content">
+          <div class="privacy-badge">
+            <span class="privacy-icon">
+              <i data-feather="shield"></i>
+            </span>
+            <span class="privacy-text">All processing occurs locally in your browser</span>
+          </div>
+          <p>Your password is <strong>never</strong> stored, saved, or transmitted. The entire calculation happens on your device, and your password never leaves your computer.</p>
+          <p>We don't use cookies or any tracking technologies related to your password input.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>© 2025 Password Strength Analyzer by Penlight. This is an educational tool only.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Character sets for entropy calculation
+    const CHARSET_SIZES = {
+      lowercase: 26,    // a-z
+      uppercase: 26,    // A-Z
+      numbers: 10,      // 0-9
+      symbols: 33,      // special characters like !@#$%, etc.
+    };
+
+    // Common password patterns to penalize
+    const COMMON_PATTERNS = [
+      'password', '123456', 'qwerty', 'admin', 'welcome', 'letmein',
+      'abc123', '111111', '12345678', 'iloveyou', 'monkey', '123123',
+      '12345', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm', 'abcdef', 'asdf',
+      'pass', 'admin', 'user', 'login', 'welcome'
+    ];
+
+    // Character type detection
+    const hasUppercase = (str) => /[A-Z]/.test(str);
+    const hasLowercase = (str) => /[a-z]/.test(str);
+    const hasNumbers = (str) => /[0-9]/.test(str);
+    const hasSymbols = (str) => /[^A-Za-z0-9]/.test(str);
+
+    /**
+     * Calculates password entropy
+     * Entropy = L * log2(R), where:
+     * - L is the length of the password
+     * - R is the size of the character set
+     */
+    function calculateEntropy(password) {
+      if (password.length === 0) return 0;
+      
+      let charsetSize = 0;
+      if (hasLowercase(password)) charsetSize += CHARSET_SIZES.lowercase;
+      if (hasUppercase(password)) charsetSize += CHARSET_SIZES.uppercase;
+      if (hasNumbers(password)) charsetSize += CHARSET_SIZES.numbers;
+      if (hasSymbols(password)) charsetSize += CHARSET_SIZES.symbols;
+      
+      return password.length * Math.log2(charsetSize);
+    }
+
+    /**
+     * Estimates time to crack based on entropy
+     * Assumes modern hardware can check billions of passwords per second
+     */
+    function estimateCrackTime(entropy) {
+      // Assume 10 billion guesses per second (high-end hardware)
+      const guessesPerSecond = 10_000_000_000;
+      const possibleCombinations = Math.pow(2, entropy);
+      const secondsToCrack = possibleCombinations / guessesPerSecond;
+      
+      if (secondsToCrack < 1) return "Instantly";
+      if (secondsToCrack < 60) return "Seconds";
+      if (secondsToCrack < 3600) return `${Math.ceil(secondsToCrack / 60)} minutes`;
+      if (secondsToCrack < 86400) return `${Math.ceil(secondsToCrack / 3600)} hours`;
+      if (secondsToCrack < 2592000) return `${Math.ceil(secondsToCrack / 86400)} days`;
+      if (secondsToCrack < 31536000) return `${Math.ceil(secondsToCrack / 2592000)} months`;
+      
+      // Convert to years for anything longer
+      const yearsToCrack = secondsToCrack / 31536000;
+      
+      // Display years with appropriate scale
+      if (yearsToCrack < 1000) return `${Math.ceil(yearsToCrack)} years`;
+      if (yearsToCrack < 1000000) return `${Math.floor(yearsToCrack / 1000)} thousand years`;
+      if (yearsToCrack < 1000000000) return `${Math.floor(yearsToCrack / 1000000)} million years`;
+      if (yearsToCrack < 1000000000000) return `${Math.floor(yearsToCrack / 1000000000)} billion years`;
+      if (yearsToCrack < 1000000000000000) return `${Math.floor(yearsToCrack / 1000000000000)} trillion years`;
+      if (yearsToCrack < 1000000000000000000) return `${Math.floor(yearsToCrack / 1000000000000000)} quadrillion years`;
+      
+      return `${Math.floor(yearsToCrack / 1000000000000000000)} quintillion years`;
+    }
+
+    /**
+     * Analyzes a password and returns detailed information
+     */
+    function analyzePassword(password) {
+      // Check character types
+      const upperCasePresent = hasUppercase(password);
+      const lowerCasePresent = hasLowercase(password);
+      const numbersPresent = hasNumbers(password);
+      const symbolsPresent = hasSymbols(password);
+      
+      const characterTypes = [
+        { type: 'uppercase', present: upperCasePresent, label: 'Uppercase' },
+        { type: 'lowercase', present: lowerCasePresent, label: 'Lowercase' },
+        { type: 'numbers', present: numbersPresent, label: 'Numbers' },
+        { type: 'symbols', present: symbolsPresent, label: 'Symbols' }
+      ];
+      
+      // Count types used (for strength calculation)
+      const typesCount = characterTypes.filter(t => t.present).length;
+      
+      // Calculate entropy
+      const entropy = calculateEntropy(password);
+      
+      // Calculate normalized strength score (0-100)
+      let strength = 0;
+      
+      // Empty password
+      if (password.length === 0) {
+        strength = 0;
+      } else {
+        // Length contribution (up to 60%)
+        strength += Math.min(password.length * 5, 60);
+        
+        // Character type contribution (up to 40%)
+        strength += typesCount * 10;
+        
+        // Check for common patterns
+        if (COMMON_PATTERNS.some(pattern => 
+          password.toLowerCase().includes(pattern.toLowerCase()))) {
+          strength = Math.max(strength - 30, 0);
+        }
+        
+        // Length penalty for very short passwords
+        if (password.length < 8) {
+          strength = Math.max(strength - (8 - password.length) * 10, 0);
+        }
+        
+        // Adjust based on entropy
+        if (entropy > 100) {
+          strength = Math.min(strength + 20, 100);
+        } else if (entropy < 40 && password.length > 0) {
+          strength = Math.max(strength - 20, 5);
+        }
+      }
+      
+      // Set visual indicators
+      let strengthClass = 'bg-danger';
+      let strengthText = 'Weak';
+      let crackTimeText = estimateCrackTime(entropy);
+      
+      if (strength > 80) {
+        strengthClass = 'bg-success';
+        strengthText = 'Strong';
+      } else if (strength > 60) {
+        strengthClass = 'bg-warning';
+        strengthText = 'Medium';
+      } else if (strength > 30) {
+        strengthClass = 'bg-orange-500';
+        strengthText = 'Fair';
+      }
+      
+      // Generate feedback
+      const feedback = [];
+      
+      if (password.length === 0) {
+        feedback.push('Type a password to see its strength');
+      } else if (password.length < 8) {
+        feedback.push('Your password is too short - use at least 8 characters');
+      } else if (password.length < 12) {
+        feedback.push('Your password length is okay, but 12+ characters would be better');
+      } else {
+        feedback.push('Your password has a good length');
+      }
+      
+      if (password.length > 0) {
+        if (typesCount < 4) {
+          const missing = [];
+          if (!upperCasePresent) missing.push('uppercase letters');
+          if (!lowerCasePresent) missing.push('lowercase letters');
+          if (!numbersPresent) missing.push('numbers');
+          if (!symbolsPresent) missing.push('special characters');
+          
+          feedback.push(`Add ${missing.join(' and ')} to make your password stronger`);
+        } else {
+          feedback.push('You\'re using a good mix of character types');
+        }
+        
+        if (COMMON_PATTERNS.some(pattern => 
+          password.toLowerCase().includes(pattern.toLowerCase()))) {
+          feedback.push('Your password contains common patterns that are easy to guess');
+        }
+        
+        // Additional tips based on pattern analysis
+        const repeatingChars = /(.)\1{2,}/;
+        if (repeatingChars.test(password)) {
+          feedback.push('Avoid repeating characters (like "aaa" or "111")');
+        }
+        
+        const sequential = /(?:abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|012|123|234|345|456|567|678|789)/i;
+        if (sequential.test(password)) {
+          feedback.push('Avoid sequential characters (like "abc" or "123")');
+        }
+      }
+      
+      return {
+        strength,
+        characterTypes,
+        strengthText,
+        strengthClass,
+        crackTimeText,
+        feedback,
+        entropy
+      };
+    }
+
+    // DOM elements
+    const passwordInput = document.getElementById('password');
+    const togglePasswordButton = document.getElementById('toggle-password');
+    const strengthLabel = document.getElementById('strength-label');
+    const characterCount = document.getElementById('character-count');
+    const strengthMeterFill = document.getElementById('strength-meter-fill');
+    const crackTimeValue = document.getElementById('crack-time');
+    const characterTypesContainer = document.getElementById('character-types');
+    const feedbackSection = document.getElementById('feedback-section');
+    const feedbackList = document.getElementById('feedback-list');
+
+    // Toggle password visibility
+    togglePasswordButton.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePasswordButton.innerHTML = type === 'password' 
+        ? '<i data-feather="eye"></i>' 
+        : '<i data-feather="eye-off"></i>';
+      feather.replace();
+    });
+
+    // Update password analysis
+    passwordInput.addEventListener('input', () => {
+      const password = passwordInput.value;
+      const analysis = analyzePassword(password);
+      
+      // Update character count
+      characterCount.textContent = `${password.length} character${password.length !== 1 ? 's' : ''}`;
+      
+      // Update strength meter
+      strengthLabel.textContent = `${analysis.strengthText} strength`;
+      strengthMeterFill.className = `meter-fill ${analysis.strengthClass}`;
+      strengthMeterFill.style.width = `${Math.max(analysis.strength, 5)}%`;
+      
+      // Update crack time
+      crackTimeValue.textContent = analysis.crackTimeText;
+      
+      // Update character types
+      characterTypesContainer.innerHTML = '';
+      analysis.characterTypes.forEach(type => {
+        const typeElement = document.createElement('div');
+        typeElement.className = 'character-type';
+        
+        const iconClass = type.present ? 'present' : 'not-present';
+        const labelClass = !type.present ? 'text-not-present' : '';
+        const iconType = type.present ? 'check' : 'x';
+        
+        typeElement.innerHTML = `
+          <div class="character-type-icon ${iconClass}">
+            <i data-feather="${iconType}"></i>
+          </div>
+          <div class="character-type-label ${labelClass}">${type.label}</div>
+        `;
+        
+        characterTypesContainer.appendChild(typeElement);
+      });
+      
+      // Update feedback
+      feedbackList.innerHTML = '';
+      analysis.feedback.forEach(item => {
+        const listItem = document.createElement('li');
+        listItem.textContent = item;
+        feedbackList.appendChild(listItem);
+      });
+      
+      // Show/hide feedback section
+      if (password.length > 0) {
+        feedbackSection.style.display = 'block';
+      } else {
+        feedbackSection.style.display = 'none';
+      }
+      
+      // Replace feather icons
+      feather.replace();
+    });
+
+    // Toggle accordion
+    function toggleAccordion(element) {
+      const content = element.nextElementSibling;
+      const isActive = content.classList.contains('active');
+      
+      // Close all accordion items
+      document.querySelectorAll('.accordion-content').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Toggle current item if it wasn't active
+      if (!isActive) {
+        content.classList.add('active');
+      }
+    }
+
+    // Initialize Feather icons
+    document.addEventListener('DOMContentLoaded', () => {
+      feather.replace();
+      
+      // Open first accordion by default
+      const firstAccordion = document.querySelector('.accordion-content');
+      if (firstAccordion) {
+        firstAccordion.classList.add('active');
+      }
+    });
+  </script>
+</body>
+</html>
